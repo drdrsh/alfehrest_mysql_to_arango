@@ -43,8 +43,8 @@ function createPersonPersonRelRecord(relationshipData) {
         'secondEntityId' : relationshipData.secondEntityId,
         'firstEntityType' : 'person',
         'secondEntityType' : 'person',
-        'type' :  "person." + typeDefinition[relationshipData.type][0],
-        'relationship': typeDefinition[relationshipData.type][0],
+        'type' :  "person." + typeDefinition[relationshipData.type][1],
+        'relationship': typeDefinition[relationshipData.type][1],
         'strings' : {
             'ar' : {
                 'comments' : relationshipData.properties['annotation'],
@@ -213,11 +213,11 @@ function loadAllDeepRel(entityData, relationshipData, databaseStructure) {
 
                     if(relationshipParts[0] == relationshipParts[1]){
                         //tribe_tribe
-                        var firstEntityId = row['first_' + relationshipParts[0]];
-                        var firstEntityType = relationshipParts[0];
-                        var secondEntityId = row['second_' + relationshipParts[1]];
-                        var secondEntityType = relationshipParts[1];
-                        var x = {
+                        let firstEntityId = row['first_' + relationshipParts[0]];
+                        let firstEntityType = relationshipParts[0];
+                        let secondEntityId = row['second_' + relationshipParts[1]];
+                        let secondEntityType = relationshipParts[1];
+                        let x = {
                             firstEntity: entityData[firstEntityType][firstEntityId],
                             firstEntityId: entityData[firstEntityType][firstEntityId]['graphId'],
                             firstEntityType: firstEntityType,
@@ -231,12 +231,12 @@ function loadAllDeepRel(entityData, relationshipData, databaseStructure) {
                         Object.assign(relObj, x);
                     } else {
                         //person_tribe
-                        var firstEntityId = row[relationshipParts[0] + '_id'];
-                        var firstEntityType = relationshipParts[0];
-                        var secondEntityId = row[relationshipParts[1] + '_id'];
-                        var secondEntityType = relationshipParts[1];
+                        let firstEntityId = row[relationshipParts[0] + '_id'];
+                        let firstEntityType = relationshipParts[0];
+                        let secondEntityId = row[relationshipParts[1] + '_id'];
+                        let secondEntityType = relationshipParts[1];
 
-                        var x = {
+                        let x = {
                             firstEntity: entityData[firstEntityType][firstEntityId],
                             firstEntityId: entityData[firstEntityType][firstEntityId]['graphId'],
                             firstEntityType: firstEntityType,
@@ -287,7 +287,7 @@ function createShallowRelRecords(relationshipData) {
         'secondEntityId' : entityIds[1],
         'firstEntityType' : entityTypes[0],
         'secondEntityType' : entityTypes[1],
-        'type' :  entityTypes[0] + ".related",
+        'type' :  entityTypes[1] + ".related",
         'relationship': 'related'
     };
 
@@ -459,10 +459,10 @@ function prepareEntityData(entityData, relationshipData, databaseStructure){
         var handler = entityHandlers[entityType];
         for(var entityId in entityList ) {
             var entity = entityList[entityId];
-            entityData[entityType][entityId]['_key'] = entity['graphId']
+            entityData[entityType][entityId]['_key'] = entity['graphId'];
+            entityData[entityType][entityId]['id'] = entity['graphId'];
             entityData[entityType][entityId]['_entity_type'] = entityType;
 
-            delete entityData[entityType][entityId]['id'];
             delete entityData[entityType][entityId]['graphId'];
             if(entityData[entityType][entityId]['strings']['ar']['references'] ){
                 entityData[entityType][entityId]['strings']['ar']['references'] =
@@ -689,37 +689,6 @@ function insertData(db, entityData, relationshipData) {
 
     var eCol = config.arango.entity_collection;
     var rCol = config.arango.relation_collection;
-    var x = {};
-    var y = {};
-
-    var e  = entityData;
-    for (var i = 0; i < e.length; i++) {
-        var k = e[i]._key;
-        if (x[k]) {
-            console.log('error');
-        }
-
-        x[k] = true;
-    }
-
-    x = {};
-
-    var r  = relationshipData;
-    for (var i = 0; i < r.length; i++) {
-        var k = r[i]._key;
-        var t_f = r[i]._to + '_' + r[i]._from;
-
-        if (x[k]) {
-            console.log('error');
-        }
-        if( y[t_f]){
-            console.log('error');
-
-        }
-
-        x[k] = true;
-        y[t_f] = true;
-    }
 
     var eData = JSON.stringify(entityData);
     var rData = JSON.stringify(relationshipData);
