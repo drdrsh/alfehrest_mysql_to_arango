@@ -1,17 +1,23 @@
 var mysql = require('mysql');
 var Promise = require("bluebird");
 var ID = require('shortid');
+var crypto = require('crypto');
 var config = require('./config.js');
 
 var pool  = mysql.createPool({
     connectionLimit : 10,
     host            : config.mysql.host,
+    port            : config.mysql.port,
     user            : config.mysql.username,
     password        : config.mysql.password
 });
 var database = config.mysql.database;
 var entities = config.entities;
 
+function EID(type, id) {
+    let hash = crypto.createHash('sha256').update(type + id).digest('hex').substr(0, 13);
+    return `${type}_${hash}`;
+}
 
 function createPersonPersonRelRecord(relationshipData) {
     var typeDefinition = [
@@ -330,6 +336,17 @@ function loadAllShallowRel(entityData, relationshipData, databaseStructure) {
 }
 
 function preparePerson(entityData, fullEntityData, relationshipData) {
+    if(entityData.strings.ar.name.indexOf("رسول") == 0) {
+        entityData.isProphet = true;
+        console.log('Prophet PBUH ID = ' + entityData.id);
+    }
+    if( entityData.strings.ar.name.indexOf("الصديق") != -1 ||
+        entityData.strings.ar.name.indexOf("عائشة")  != -1 ||
+        entityData.strings.ar.name.indexOf("الخطاب") != -1) {
+        console.log(entityData.strings.ar.name + " -> " + entityData.id);
+    }
+
+
     var dates = ['born', 'died', 'hijrah', 'islam', 'redda'];
     for(var i=0; i<dates.length; i++) {
         var d = dates[i];
@@ -543,7 +560,7 @@ function loadSingleEntityData(entityName) {
                         }
                         newEntity['strings'][lang][idx] = entity[idx];
                     }
-                    newEntity['graphId'] = entityName + "_" + ID.generate();
+                    newEntity['graphId'] = EID(entityName, newEntity.id);
                     entities[newEntity.id] = newEntity;
                 }
                 resolve({
@@ -598,7 +615,9 @@ function parseDatabaseStructure(rows) {
     for(var j=0; j<rows.length; j++) {
 
         var tableName = rows[j][fieldName];
-        if (tableName.indexOf('_') == -1 || tableName.indexOf('string') != -1) {
+        if (config.ignore_tables.indexOf(tableName) != -1 ||
+            tableName.indexOf('_') == -1 ||
+            tableName.indexOf('string') != -1) {
             continue;
         }
 
@@ -725,9 +744,9 @@ Promise
         return dropDatabase(db, entityData, relationshipData)
     })
     .spread(createDatabase)
-//    .spread(createCollections)
     .spread(createGraph)
     .spread(insertData)
     .spread((db, entityData, relationshipData) => {
         console.log('Done!');
+        process.exit(0);
     });

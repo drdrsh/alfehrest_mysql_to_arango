@@ -5,6 +5,7 @@
   "dependencies": {
     "arangojs": "^4.3.0",
     "bluebird": "^3.3.3",
+    "crypto": "0.0.3",
     "mysql": "^2.10.2",
     "shortid": "^2.2.4"
   },

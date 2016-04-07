@@ -2,6 +2,7 @@ var config = {
 
     'mysql' : {
         'host': '',
+        'port': '',
         'user': '',
         'password': '',
         'database': ''
